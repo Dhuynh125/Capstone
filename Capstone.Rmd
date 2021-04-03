@@ -80,27 +80,27 @@ pairs(scaled_data)
 You can also embed plots, for example:
 
 ```{r pressure, echo=FALSE}
-# set.seed(1000)
-# training.samples <- scaled_data$three_pt_pct %>%
-#   createDataPartition(p=0.8, list = FALSE)
-# train.data <- scaled_data[training.samples,]
-# test.data <- scaled_data[-training.samples,]
-# ggplot(train.data, aes(free_throw_pct,three_pt_pct)) +
-#   geom_point() +
-#   stat_smooth()
-# 
-# #Linear regression model
-# linModel <- lm(three_pt_pct ~ free_throw_pct, data = train.data)
-# prediction <- linModel %>% predict(test.data)
-# data.frame(
-#   RMSE = RMSE(prediction, test.data$three_pt_pct),
-#   Rsquared = R2(prediction, test.data$three_pt_pct)
-# )
-# ggplot(train.data, aes(free_throw_pct, three_pt_pct) ) +
-#   geom_point() +
-#   stat_smooth(method = lm, formula = y ~ x)
-# 
-# summary(linModel)
+set.seed(1000)
+training.samples <- scaled_data$three_pt_pct %>%
+   createDataPartition(p=0.8, list = FALSE)
+train.data <- scaled_data[training.samples,]
+test.data <- scaled_data[-training.samples,]
+ggplot(train.data, aes(free_throw_pct,three_pt_pct)) +
+  geom_point() +
+  stat_smooth()
+
+#Linear regression model
+linModel <- lm(three_pt_pct ~ free_throw_pct, data = train.data)
+prediction <- linModel %>% predict(test.data)
+data.frame(
+  RMSE = RMSE(prediction, test.data$three_pt_pct),
+  Rsquared = R2(prediction, test.data$three_pt_pct)
+)
+ggplot(train.data, aes(free_throw_pct, three_pt_pct) ) +
+  geom_point() +
+  stat_smooth(method = lm, formula = y ~ x)
+
+summary(linModel)
 
 rForest <- randomForest(three_pt_pct ~., data = scaled_data, mtry = 10, importance = TRUE, na.action = na.omit)
 print(rForest)
