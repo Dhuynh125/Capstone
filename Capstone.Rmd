@@ -1,0 +1,110 @@
+---
+title: "Capstone"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+setwd("C:/Users/huynh/Downloads")
+# install.packages("tidyverse")
+# install.packages("ggplot2")
+# install.packages("corrplot")
+# install.packages("heatmaply")
+# install.packages("readxl")
+# install.packages("caret")
+# install.packages("Hmisc")
+# install.packages("randomForest")
+library(randomForest)
+library(corrplot)
+library(ggplot2)
+library(tidyverse)
+library(readxl) 
+library(heatmaply)
+library(caret)
+library(Hmisc)
+playerData <- read_excel("Book.xlsx")
+playerData <- playerData[,-1]
+#cleaning up Player Names in data
+playerData$Player <- gsub('\\.*', '', playerData$Player)
+#removing unnecessary/duplicated data due to players swapping teams during a season
+playerData <- playerData[!duplicated(playerData[c(1,3)]),]
+#removing NAs from table
+playerData <- playerData[complete.cases(playerData),]
+#removing players that have no data on 3 pointers
+playerData <- playerData %>%
+  filter(playerData$'3P%' != 0, playerData$'3PA'>= 10, playerData$FTA >=10)
+summary(playerData)
+# calculate correlation matrix
+correlationMatrix <- cor(playerData[,5:29])
+corrplot(correlationMatrix)
+# finding highly correlated attributes and getting rid of the redundant data
+highCorrelation <- findCorrelation(correlationMatrix, cutoff=0.75)
+newPlayerData = subset(playerData, select = -c(highCorrelation))
+names(newPlayerData)[1] <- "player_name"
+names(newPlayerData)[2] <- "position"
+names(newPlayerData)[3] <- "min_played"
+names(newPlayerData)[4] <- "fg_att"
+names(newPlayerData)[5] <- "three_pt_att"
+names(newPlayerData)[6] <- "three_pt_pct"
+names(newPlayerData)[7] <- "two_pt_made"
+names(newPlayerData)[8] <- "two_pt_pct"
+names(newPlayerData)[9] <- "eff_fg_pct"
+names(newPlayerData)[10] <- "free_throw_pct"
+names(newPlayerData)[11] <- "off_rebound"
+names(newPlayerData)[12] <- "def_rebound"
+names(newPlayerData)[13] <- "blocks"
+names(newPlayerData)[14] <- "turnovers"
+names(newPlayerData)[15] <- "per_fouls"
+names(newPlayerData)[16] <- "points"
+scaled_data <- as.data.frame(scale(newPlayerData[,c(3:16)]))
+hist.data.frame(scaled_data)
+summary(scaled_data)
+boxplot(scaled_data)
+corrplot(cor(scaled_data))
+pairs(scaled_data)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+# set.seed(1000)
+# training.samples <- scaled_data$three_pt_pct %>%
+#   createDataPartition(p=0.8, list = FALSE)
+# train.data <- scaled_data[training.samples,]
+# test.data <- scaled_data[-training.samples,]
+# ggplot(train.data, aes(free_throw_pct,three_pt_pct)) +
+#   geom_point() +
+#   stat_smooth()
+# 
+# #Linear regression model
+# linModel <- lm(three_pt_pct ~ free_throw_pct, data = train.data)
+# prediction <- linModel %>% predict(test.data)
+# data.frame(
+#   RMSE = RMSE(prediction, test.data$three_pt_pct),
+#   Rsquared = R2(prediction, test.data$three_pt_pct)
+# )
+# ggplot(train.data, aes(free_throw_pct, three_pt_pct) ) +
+#   geom_point() +
+#   stat_smooth(method = lm, formula = y ~ x)
+# 
+# summary(linModel)
+
+rForest <- randomForest(three_pt_pct ~., data = scaled_data, mtry = 10, importance = TRUE, na.action = na.omit)
+print(rForest)
+plot(rForest)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
